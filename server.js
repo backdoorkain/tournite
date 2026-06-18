@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -34,11 +35,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 2. Busca tu bloque app.use(session(...)) viejo y reemplázalo por este:
 app.use(session({
+    store: new SQLiteStore({ 
+        db: 'torneo.db', // Usa el mismo archivo de tu base de datos
+        dir: '.' 
+    }),
     secret: 'secreto-torneo-fortnite-2026',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    cookie: { 
+        maxAge: 7 * 24 * 60 * 60 * 1000, // La sesión durará activa 7 días seguidos
+        secure: false 
+    }
 }));
 
 let CLAVE_PARTIDA = "CERRADO";
