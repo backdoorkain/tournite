@@ -8,10 +8,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
 // Configuración de la Base de Datos SQLite
-const db = new sqlite3.Database('./torneo.db', (err) => {
-    if (err) console.error("Error al abrir BD:", err.message);
-    console.log('Conectado a la base de datos SQLite.');
-});
+const db = new sqlite3.Database('/data/torneo.db', (err) => { ... });
 
 // Crear tabla adaptada con monto_pago para simulaciones
 db.serialize(() => {
