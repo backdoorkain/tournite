@@ -6,6 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "connect-sqlite3": "^0.9.13",
     "express": "^4.21.0",
     "express-session": "^1.18.0",
     "sqlite3": "^5.1.7",
