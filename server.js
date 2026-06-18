@@ -48,10 +48,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Busca tu bloque app.use(session(...)) y asegúrate de que luzca así para Neon:
 app.use(session({
     store: new pgSession({
         pool: pool,
-        tableName: 'session'
+        tableName: 'session',
+        createTableIfMissing: true // <--- ¡Añade esta línea! Neon creará la tabla de sesiones sola al arrancar
     }),
     secret: 'secreto-torneo-fortnite-2026',
     resave: false,
