@@ -130,7 +130,8 @@ app.post('/create-checkout-session', async (req, res) => {
                 quantity: 1,
             }],
             mode: 'payment',
-            success_url: `${process.env.YOUR_DOMAIN}/verify-session?session_id={CHECKOUT_SESSION_ID}`,
+            // BUSCA ESTA LÍNEA CON ERROR EN TU SERVER.JS:
+            success_url: `${process.env.YOUR_DOMAIN}/portal.html/verify-session?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.YOUR_DOMAIN}/checkout.html`,
         });
         res.json({ url: session.url });
