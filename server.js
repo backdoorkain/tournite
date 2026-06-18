@@ -24,18 +24,19 @@ app.post('/create-checkout-session', async (req, res) => {
               name: 'Inscripción al Torneo de Fortnite',
               description: 'Acceso exclusivo a la partida privada y tabla de posiciones.',
             },
-            unit_amount: 500, // Precio en centavos (5.00 USD)
+            unit_amount: 500, // $5.00 USD
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      // Redirecciona al usuario a payment.html enviando el ID de sesión para validar
+      // success_url y cancel_url se mantienen igual
       success_url: `${process.env.YOUR_DOMAIN}/payment.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.YOUR_DOMAIN}/index.html`,
     });
 
-    res.json({ id: session.id });
+    // CAMBIO IMPORTANTE: Enviamos la URL directa de la pasarela de Stripe
+    res.json({ url: session.url });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
