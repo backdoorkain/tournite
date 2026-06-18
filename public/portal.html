@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal del Torneo - Fortnite</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0b111e; color: #ffffff; padding: 25px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* Encabezado Perfil */
+        .header-panel { display: flex; justify-content: space-between; align-items: center; background-color: #151f32; border: 1px solid #223452; padding: 20px 30px; border-radius: 12px; margin-bottom: 25px; }
+        .welcome-text { font-size: 14px; color: #94a3b8; }
+        .welcome-text strong { color: #38bdf8; font-size: 18px; display: block; margin-top: 2px; }
+        
+        /* Widgets Estadísticas */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background-color: #151f32; border: 1px solid #223452; border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-title { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .stat-value { font-size: 26px; font-weight: 800; color: #ffffff; }
+        .stat-value.highlight { color: #10b981; }
+        
+        /* Distribución de Premios */
+        .prize-distribution { display: flex; justify-content: space-around; font-size: 12px; color: #94a3b8; margin-top: 10px; border-top: 1px solid #223452; padding-top: 10px; }
+        .prize-distribution span { font-weight: bold; color: #ffffff; }
+
+        /* Panel Clave Partida */
+        .room-card { background: linear-gradient(135deg, #1e1b4b 0%, #151f32 100%); border: 1px solid #4f46e5; border-radius: 12px; padding: 25px; text-align: center; margin-bottom: 30px; }
+        .room-title { font-size: 12px; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .key-box { background-color: #0b111e; border: 1px dashed #4f46e5; padding: 12px; border-radius: 8px; font-size: 22px; font-weight: 800; color: #38bdf8; display: inline-block; min-width: 250px; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* Tabla de Posiciones */
+        .leaderboard-card { background-color: #151f32; border: 1px solid #223452; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        h2 { font-size: 18px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #223452; padding-bottom: 10px; color: #38bdf8; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #223452; }
+        th { background-color: #0b111e; color: #94a3b8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        
+        /* Estilos Podio */
+        .rank-1 { background-color: rgba(234, 179, 8, 0.08); color: #facc15; font-weight: bold; }
+        .rank-2 { background-color: rgba(148, 163, 184, 0.08); color: #cbd5e1; font-weight: bold; }
+        .rank-3 { background-color: rgba(180, 83, 9, 0.08); color: #fb923c; font-weight: bold; }
+        
+        .medal { font-size: 16px; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- BARRA SUPERIOR USUARIO -->
+        <div class="header-panel">
+            <div class="welcome-text">
+                Jugador Autenticado
+                <strong id="player-id">Cargando...</strong>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8; background: #0b111e; padding: 8px 15px; border-radius: 20px; border: 1px solid #223452;">
+                Estado: <span style="color:#10b981; font-weight:bold;">Pase Pagado ✔</span>
+            </div>
+        </div>
+
+        <!-- INDICADORES EN TIEMPO REAL -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Cupos Reservados</div>
+                <div id="stat-cupos" class="stat-value">--/--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Fondo Recaudado</div>
+                <div id="stat-bolsa" class="stat-value highlight">$0.00 USD</div>
+                <div class="prize-distribution">
+                    <div>1º: <span id="p1-share">$0.00</span></div>
+                    <div>2º: <span id="p2-share">$0.00</span></div>
+                    <div>3º: <span id="p3-share">$0.00</span></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Estatus Torneo</div>
+                <div id="stat-estado" class="stat-value" style="color: #a5b4fc;">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- ACCESO A LA SALA PRIVADA -->
+        <div class="room-card">
+            <div class="room-title">Clave de Partida Personalizada</div>
+            <div id="room-key" class="key-box">CERRADA</div>
+            <p style="font-size: 12px; color:#94a3b8; margin-top: 10px;">Copia esta clave e introdúcela en el menú de emparejamiento privado de Fortnite.</p>
+        </div>
+
+        <!-- TABLA DINÁMICA DE CLASIFICACIÓN -->
+        <div class="leaderboard-card">
+            <h2>Tabla de Posiciones Oficial (Solo Posición)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Puesto</th>
+                        <th>ID de Epic Games</th>
+                        <th>Partida 1</th>
+                        <th>Partida 2</th>
+                        <th>Partida 3</th>
+                        <th style="text-align: right;">Total Puntos</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- Se inyecta dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function actualizarPortal() {
+            try {
+                const response = await fetch('/api/torneo-data');
+                if (!response.ok) {
+                    // Si el servidor expulsa al usuario (no logueado/no pagado), lo manda al index
+                    window.location.href = '/index.html';
+                    return;
+                }
+                const data = await response.json();
+
+                // Actualizar Textos
+                document.getElementById('player-id').innerText = data.usuarioActual;
+                document.getElementById('stat-cupos').innerText = data.contadorCupos;
+                document.getElementById('stat-bolsa').innerText = `$${data.bolsaTotal} USD`;
+                document.getElementById('stat-estado').innerText = data.estadoTorneo;
+                document.getElementById('room-key').innerText = data.clave;
+
+                // Calcular reparto del fondo (50%, 30%, 20%)
+                const bolsa = parseFloat(data.bolsaTotal) || 0;
+                document.getElementById('p1-share').innerText = `$${(bolsa * 0.50).toFixed(2)}`;
+                document.getElementById('p2-share').innerText = `$${(bolsa * 0.30).toFixed(2)}`;
+                document.getElementById('p3-share').innerText = `$${(bolsa * 0.20).toFixed(2)}`;
+
+                // Renderizar Tabla
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = "";
+
+                if(data.tabla.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Esperando el inicio de las partidas...</td></tr>`;
+                    return;
+                }
+
+                data.tabla.forEach((jugador, index) => {
+                    const puesto = index + 1;
+                    let claseFila = "";
+                    let prefijoMedal = "";
+
+                    // Resaltar Podio Visualmente
+                    if(puesto === 1) { claseFila = "rank-1"; prefijoMedal = "<span class='medal'>🥇</span>"; }
+                    else if(puesto === 2) { claseFila = "rank-2"; prefijoMedal = "<span class='medal'>🥈</span>"; }
+                    else if(puesto === 3) { claseFila = "rank-3"; prefijoMedal = "<span class='medal'>🥉</span>"; }
+
+                    tbody.innerHTML += `
+                        <tr class="${claseFila}">
+                            <td>${prefijoMedal}${puesto}º</td>
+                            <td><strong>${jugador.epic_id}</strong> ${jugador.epic_id === data.usuarioActual ? '<span style="color:#38bdf8; font-size:11px;">(Tú)</span>' : ''}</td>
+                            <td>${jugador.p1_pos > 0 ? 'Top ' + jugador.p1_pos : '—'}</td>
+                            <td>${jugador.p2_pos > 0 ? 'Top ' + jugador.p2_pos : '—'}</td>
+                            <td>${jugador.p3_pos > 0 ? 'Top ' + jugador.p3_pos : '—'}</td>
+                            <td style="text-align: right; font-weight: bold; color: #38bdf8;">${jugador.puntos_totales} Pts</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (err) {
+                console.error("Error cargando el portal:", err);
+            }
+        }
+
+        // Ejecutar inmediatamente al cargar y actualizar cada 15 segundos automáticamente
+        actualizarPortal();
+        setInterval(actualizarPortal, 15000);
+    </script>
+</body>
+</html>
