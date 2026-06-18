@@ -61,9 +61,9 @@ app.use(session({
 }));
 
 // VARIABLES DINÁMICAS GLOBALES EN MEMORIA
-let CLAVE_PARTIDA = "CERRADO";
+let CLAVE_PARTIDA = "tournite2026x1"; // Cambiada a tu nueva clave predeterminada
 let LIMITE_JUGADORES = 20;       
-let TORNEO_ESTADO = "CERRADO";   
+let TORNEO_ESTADO = "CERRADO"; 
 
 function calcularPuntosPorPosicion(posicion) {
     const pos = parseInt(posicion) || 0;
@@ -195,19 +195,39 @@ app.post('/api/admin/configurar', (req, res) => {
     res.json({ success: true });
 });
 
+// 1. REEMPLAZA EL INYECTOR VIEJO POR ESTE NUEVO (Acepta contraseña)
 app.post('/api/admin/inyectar-jugador', async (req, res) => {
-    const { epic_id, monto } = req.body;
+    if (!req.session.user || req.session.user.es_admin !== 1) return res.status(403).json({ error: "No admin" });
+    const { epic_id, monto, password } = req.body;
     if (!epic_id) return res.status(400).json({ error: "Falta ID" });
+    
     const montoNum = parseFloat(monto) || 0.00;
+    const passInyectada = password || "bot123"; // Contraseña por defecto si viene vacía
 
     try {
         await pool.query(`
             INSERT INTO usuarios (epic_id, password, pagado, monto_pago) 
-            VALUES ($1, 'bot123', 1, $2) 
-            ON CONFLICT (epic_id) DO UPDATE SET pagado = 1, monto_pago = $2
-        `, [epic_id, montoNum]);
+            VALUES ($1, $2, 1, $3) 
+            ON CONFLICT (epic_id) DO UPDATE SET pagado = 1, monto_pago = $3, password = $2
+        `, [epic_id, passInyectada, montoNum]);
         res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 2. AÑADE ESTE NUEVO ENDPOINT INMEDIATAMENTE ABAJO (Para eliminar jugadores)
+app.post('/api/admin/eliminar-jugador', async (req, res) => {
+    if (!req.session.user || req.session.user.es_admin !== 1) return res.status(403).json({ error: "No admin" });
+    const { epic_id } = req.body;
+    if (!epic_id) return res.status(400).json({ error: "Falta el ID del jugador" });
+
+    try {
+        await pool.query(`DELETE FROM usuarios WHERE epic_id = $1 AND es_admin = 0`, [epic_id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/admin/actualizar-puntos', async (req, res) => {
