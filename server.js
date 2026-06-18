@@ -114,7 +114,9 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// --- STRIPE ---
+// ==========================================================
+// --- PASARELA DE PAGOS (STRIPE) CORREGIDA ---
+// ==========================================================
 app.post('/create-checkout-session', async (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: "Inicia sesión" });
     try {
@@ -125,13 +127,13 @@ app.post('/create-checkout-session', async (req, res) => {
                 price_data: {
                     currency: 'usd',
                     product_data: { name: 'Inscripción Torneo Fortnite' },
-                    unit_amount: 500,
+                    unit_amount: 500, // $5.00 USD
                 },
                 quantity: 1,
             }],
             mode: 'payment',
-            // BUSCA ESTA LÍNEA CON ERROR EN TU SERVER.JS:
-            success_url: `${process.env.YOUR_DOMAIN}/portal.html/verify-session?session_id={CHECKOUT_SESSION_ID}`,
+            // RUTA CORREGIDA: Se eliminó /portal.html de en medio
+            success_url: `${process.env.YOUR_DOMAIN}/verify-session?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.YOUR_DOMAIN}/checkout.html`,
         });
         res.json({ url: session.url });
