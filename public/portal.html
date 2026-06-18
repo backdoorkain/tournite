@@ -113,44 +113,46 @@
             try {
                 const response = await fetch('/api/torneo-data');
                 if (!response.ok) {
-                    // Si el servidor expulsa al usuario (no logueado/no pagado), lo manda al index
                     window.location.href = '/index.html';
                     return;
                 }
                 const data = await response.json();
-
-                // Actualizar Textos
+        
+                // 1. Actualizar textos básicos
                 document.getElementById('player-id').innerText = data.usuarioActual;
                 document.getElementById('stat-cupos').innerText = data.contadorCupos;
-                document.getElementById('stat-bolsa').innerText = `$${data.bolsaTotal} USD`;
                 document.getElementById('stat-estado').innerText = data.estadoTorneo;
                 document.getElementById('room-key').innerText = data.clave;
-
-                // Calcular reparto del fondo (50%, 30%, 20%)
-                const bolsa = parseFloat(data.bolsaTotal) || 0;
-                document.getElementById('p1-share').innerText = `$${(bolsa * 0.50).toFixed(2)}`;
-                document.getElementById('p2-share').innerText = `$${(bolsa * 0.30).toFixed(2)}`;
-                document.getElementById('p3-share').innerText = `$${(bolsa * 0.20).toFixed(2)}`;
-
-                // Renderizar Tabla
+        
+                // 2. CORRECCIÓN CLAVE: Enlazar los nombres exactos que envía el servidor Postgres
+                document.getElementById('prize-1st').innerText = `$${data.premio1st} USD`;
+                document.getElementById('prize-2nd').innerText = `$${data.premio2nd} USD`;
+                document.getElementById('prize-3rd').innerText = `$${data.premio3rd} USD`;
+                
+                // Buscamos el contenedor del texto del medio para corregir el "undefined"
+                const bolsaContainer = document.getElementById('stat-bolsa');
+                if (bolsaContainer) {
+                    bolsaContainer.innerText = `Pozo Total Recompensas: $${data.pozoVisible} USD (Menos Tarifas)`;
+                }
+        
+                // 3. Renderizar Tabla de Posiciones
                 const tbody = document.getElementById('leaderboard-body');
                 tbody.innerHTML = "";
-
+        
                 if(data.tabla.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Esperando el inicio de las partidas...</td></tr>`;
                     return;
                 }
-
+        
                 data.tabla.forEach((jugador, index) => {
                     const puesto = index + 1;
                     let claseFila = "";
                     let prefijoMedal = "";
-
-                    // Resaltar Podio Visualmente
+        
                     if(puesto === 1) { claseFila = "rank-1"; prefijoMedal = "<span class='medal'>🥇</span>"; }
                     else if(puesto === 2) { claseFila = "rank-2"; prefijoMedal = "<span class='medal'>🥈</span>"; }
                     else if(puesto === 3) { claseFila = "rank-3"; prefijoMedal = "<span class='medal'>🥉</span>"; }
-
+        
                     tbody.innerHTML += `
                         <tr class="${claseFila}">
                             <td>${prefijoMedal}${puesto}º</td>
@@ -162,13 +164,13 @@
                         </tr>
                     `;
                 });
-
+        
             } catch (err) {
                 console.error("Error cargando el portal:", err);
             }
         }
-
-        // Ejecutar inmediatamente al cargar y actualizar cada 15 segundos automáticamente
+        
+        // Ejecutar inmediatamente y refrescar cada 15 segundos
         actualizarPortal();
         setInterval(actualizarPortal, 15000);
     </script>
