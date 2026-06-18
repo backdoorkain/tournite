@@ -2,48 +2,88 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Torneo Fortnite - Inscripción</title>
-    <!-- Agrega el SDK de PayPal. Reemplaza TU_PAYPAL_CLIENT_ID -->
+    
+    <!-- 1. SDK DE PAYPAL: REEMPLAZA EL TEXTO AaUt8... CON TU CLIENT ID COMPLETO -->
     <script src="https://paypal.com"></script>
 </head>
-<body>
+<body style="font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto;">
+
     <h1>Inscripción al Torneo</h1>
-    <p>Costo de entrada: $5.00 USD</p>
+    <p style="font-size: 18px;">Costo de entrada: <strong>$5.00 USD</strong></p>
     
-    <button id="checkout-button" style="padding: 10px; margin-bottom: 20px;">Pagar con Tarjeta (Stripe)</button>
+    <!-- BOTÓN DE STRIPE (TARJETA) -->
+    <button id="checkout-button" style="width: 100%; padding: 12px; background-color: #5469d4; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-bottom: 25px; font-weight: bold;">
+        Pagar con Tarjeta (Stripe)
+    </button>
     
-    <!-- Contenedor donde PayPal dibujará sus botones automáticamente -->
-    <div id="paypal-button-container" style="max-width: 300px;"></div>
+    <p style="text-align: center; color: #666; margin-bottom: 15px;">— O BIEN —</p>
+
+    <!-- CONTENEDOR DONDE SE DIBUJARÁ PAYPAL AUTOMÁTICAMENTE -->
+    <div id="paypal-button-container" style="width: 100%;"></div>
 
     <script>
-        // Lógica de Stripe
+        // === LÓGICA PARA EL BOTÓN DE STRIPE ===
         document.getElementById('checkout-button').addEventListener('click', async () => {
-            const response = await fetch('/create-checkout-session', { method: 'POST' });
-            const data = await response.json();
-            if (data.url) window.location.href = data.url;
+            try {
+                const response = await fetch('/create-checkout-session', { method: 'POST' });
+                const data = await response.json();
+                if (data.url) {
+                    window.location.href = data.url; 
+                } else {
+                    alert("Error al generar la pasarela de Stripe");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Hubo un problema de conexión con el servidor.");
+            }
         });
 
-        // Lógica de PayPal
+        // === LÓGICA PARA LOS BOTONES DE PAYPAL ===
         paypal.Buttons({
+            // Se ejecuta cuando el usuario hace clic en el botón de PayPal
             createOrder: async () => {
-                const response = await fetch('/create-paypal-order', { method: 'POST' });
-                const order = await response.json();
-                return order.id;
-            },
-            onApprove: async (data, actions) => {
-                const response = await fetch('/capture-paypal-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderID: data.orderID })
-                });
-                const resData = await response.json();
-                if (resData.success) {
-                    window.location.href = resData.redirect;
-                } else {
-                    alert("Error al procesar el pago con PayPal");
+                try {
+                    const response = await fetch('/create-paypal-order', { method: 'POST' });
+                    const order = await response.json();
+                    return order.id; // Entrega el ID de orden a PayPal
+                } catch (error) {
+                    console.error("Error al crear orden de PayPal:", error);
                 }
+            },
+            // Se ejecuta cuando el usuario autoriza el pago en la ventana de PayPal
+            onApprove: async (data, actions) => {
+                try {
+                    const response = await fetch('/capture-paypal-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderID: data.orderID })
+                    });
+                    const resData = await response.json();
+                    
+                    if (resData.success) {
+                        // Si el servidor confirma el pago, redirige a la página de éxito
+                        window.location.href = resData.redirect;
+                    } else {
+                        alert("El servidor no pudo validar el pago con PayPal.");
+                    }
+                } catch (error) {
+                    console.error("Error al procesar la captura:", error);
+                    alert("Error de comunicación al procesar tu pago.");
+                }
+            },
+            // Se ejecuta si el usuario cierra la ventana de PayPal o cancela
+            onCancel: function (data) {
+                alert("Pago cancelado por el usuario.");
+            },
+            // Se ejecuta si ocurre un error crítico en la interfaz de PayPal
+            onError: function (err) {
+                console.error("Error en el botón de PayPal:", err);
+                alert("Ocurrió un error con la plataforma de PayPal. Verifica tu Client ID.");
             }
-        }).render('#paypal-button-container');
+        }).render('#paypal-button-container'); // Dibuja los botones en el div de arriba
     </script>
+
 </body>
 </html>
