@@ -3,214 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo Fortnite - Inscripción</title>
-    
-    <!-- ASEGÚRATE DE PONER TU CLIENT ID REAL DESPUÉS DE "client-id=" -->
-    <script src="https://www.paypal.com/sdk/js?client-id=AXr5X5oS8AwyPgqkPz8Scxur8rittPnkfiz5PAKHugtEPyCjefWzOzLR7SXWKMXUP9e190kaNy55irVI&currency=USD"></script>
-
+    <title>Torneo Fortnite - Acceso</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #0b111e; /* Fondo azul oscuro profundo */
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .card {
-            background-color: #151f32; /* Azul oscuro secundario para la tarjeta */
-            border: 1px solid #223452;
-            border-radius: 12px;
-            padding: 30px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #4f46e5; /* Acento azul eléctrico */
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .subtitle {
-            color: #94a3b8;
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-
-        .price-box {
-            background-color: #0b111e;
-            border: 1px dashed #4f46e5;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 28px;
-        }
-
-        .price-label {
-            font-size: 12px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .price-amount {
-            font-size: 28px;
-            font-weight: 800;
-            color: #38bdf8; /* Azul claro brillante para el precio */
-            margin-top: 4px;
-        }
-
-        .stripe-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); /* Degradado azul */
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
-            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
-        }
-
-        .stripe-btn:hover {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
-        }
-
-        .stripe-btn:active {
-            transform: translateY(1px);
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            color: #475569;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 24px 0;
-        }
-
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #223452;
-        }
-
-        .divider:not(:empty)::before { margin-right: .75em; }
-        .divider:not(:empty)::after { margin-left: .75em; }
-
-        #paypal-button-container {
-            width: 100%;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0b111e; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .auth-container { background-color: #151f32; border: 1px solid #223452; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; }
+        .tabs { display: flex; border-bottom: 1px solid #223452; background-color: #0e1726; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; color: #94a3b8; font-weight: 600; cursor: pointer; text-transform: uppercase; font-size: 13px; transition: all 0.2s; }
+        .tab-btn.active { color: #38bdf8; border-bottom: 2px solid #4f46e5; background-color: #151f32; }
+        .form-wrapper { padding: 30px; }
+        .form-content { display: none; }
+        .form-content.active { display: block; }
+        h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #ffffff; text-transform: uppercase; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 11px; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        input { width: 100%; padding: 12px; background-color: #0b111e; border: 1px solid #223452; border-radius: 6px; color: white; font-size: 14px; transition: border 0.2s; }
+        input:focus { outline: none; border-color: #4f46e5; }
+        .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; text-transform: uppercase; transition: filter 0.2s; margin-top: 10px; }
+        .btn-submit:hover { filter: brightness(1.1); }
+        .error-msg { color: #ef4444; font-size: 13px; margin-top: 15px; text-align: center; display: none; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Fase de Registro</h1>
-        <p class="subtitle">Asegura tu cupo en la partida privada</p>
-        
-        <div class="price-box">
-            <p class="price-label">Costo de Entrada</p>
-            <p class="price-amount">$5.00 USD</p>
+    <div class="auth-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('login')">Ingresar</button>
+            <button class="tab-btn" onclick="switchTab('register')">Registrarse</button>
         </div>
         
-        <!-- BOTÓN DE STRIPE -->
-        <button id="checkout-button" class="stripe-btn">
-            Pagar con Tarjeta Bancaria
-        </button>
-        
-        <div class="divider">O bien continuar con</div>
+        <div class="form-wrapper">
+            <!-- FORMULARIO DE INICIO DE SESIÓN -->
+            <div id="login-form" class="form-content active">
+                <h2>Iniciar Sesión</h2>
+                <p class="subtitle">Ingresa al portal del torneo</p>
+                <form onsubmit="handleAuth(event, '/api/login', 'login-error')">
+                    <div class="form-group">
+                        <label>ID de Epic Games</label>
+                        <input type="text" name="epic_id" required placeholder="Ej. Ninja">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" name="password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-submit">Entrar al Portal</button>
+                    <div id="login-error" class="error-msg"></div>
+                </form>
+            </div>
 
-        <!-- CONTENEDOR DE PAYPAL -->
-        <div id="paypal-button-container"></div>
+            <!-- FORMULARIO DE REGISTRO -->
+            <div id="register-form" class="form-content">
+                <h2>Crear Cuenta</h2>
+                <p class="subtitle">Registra tu ID para el torneo</p>
+                <form onsubmit="handleAuth(event, '/api/registrar', 'register-error')">
+                    <div class="form-group">
+                        <label>ID de Epic Games Oficial</label>
+                        <input type="text" name="epic_id" required placeholder="Tu ID exacto del juego">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña del Sitio</label>
+                        <input type="password" name="password" required placeholder="Crea una contraseña">
+                    </div>
+                    <button type="submit" class="btn-submit">Registrar e Inscribirse</button>
+                    <div id="register-error" class="error-msg"></div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
-        // === LOGICA STRIPE ===
-        document.getElementById('checkout-button').addEventListener('click', async () => {
-            try {
-                const response = await fetch('/create-checkout-session', { method: 'POST' });
-                const data = await response.json();
-                if (data.url) {
-                    window.location.href = data.url; 
-                } else {
-                    alert("Error al generar la pasarela de Stripe");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Hubo un problema de conexión con el servidor.");
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.form-content').forEach(f => f.classList.remove('active'));
+            
+            if(type === 'login') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('login-form').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('register-form').classList.add('active');
             }
-        });
+        }
 
-        // === LOGICA PAYPAL ===
-        if (typeof paypal !== 'undefined') {
-            paypal.Buttons({
-                style: {
-                    layout: 'vertical',
-                    color:  'gold',
-                    shape:  'rect',
-                    label:  'paypal'
-                },
-                createOrder: async () => {
-                    try {
-                        const response = await fetch('/create-paypal-order', { method: 'POST' });
-                        const order = await response.json();
-                        return order.id;
-                    } catch (error) {
-                        console.error("Error al crear orden de PayPal:", error);
-                    }
-                },
-                onApprove: async (data, actions) => {
-                    try {
-                        const response = await fetch('/capture-paypal-order', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ orderID: data.orderID })
-                        });
-                        const resData = await response.json();
-                        
-                        if (resData.success) {
-                            window.location.href = resData.redirect;
-                        } else {
-                            alert("El servidor no pudo validar el pago con PayPal.");
-                        }
-                    } catch (error) {
-                        console.error("Error al procesar la captura:", error);
-                        alert("Error de comunicación al procesar tu pago.");
-                    }
-                },
-                onCancel: function (data) {
-                    alert("Pago cancelado por el usuario.");
-                },
-                onError: function (err) {
-                    console.error("Error en el botón de PayPal:", err);
-                    alert("Error en la plataforma de PayPal. Verifica que tu Client ID sea correcto.");
+        async function handleAuth(event, endpoint, errorId) {
+            event.preventDefault();
+            const errorDiv = document.getElementById(errorId);
+            errorDiv.style.display = 'none';
+
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const resData = await response.json();
+
+                if (response.ok && resData.redirect) {
+                    window.location.href = resData.redirect;
+                } else {
+                    errorDiv.innerText = resData.error || "Ocurrió un error inesperado.";
+                    errorDiv.style.display = 'block';
                 }
-            }).render('#paypal-button-container');
-        } else {
-            console.error("El SDK de PayPal no se cargó correctamente. Revisa la etiqueta <script> en el head.");
-            document.getElementById('paypal-button-container').innerHTML = "<p style='color:#ef4444; font-size:14px;'>Error al cargar los botones de PayPal. Verifica el Client ID.</p>";
+            } catch (err) {
+                errorDiv.innerText = "Error de conexión con el servidor.";
+                errorDiv.style.display = 'block';
+            }
         }
     </script>
-
 </body>
 </html>
