@@ -5,26 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Torneo Fortnite - Inscripción</title>
     
-    <!-- 1. SDK DE PAYPAL: REEMPLAZA EL TEXTO AaUt8... CON TU CLIENT ID COMPLETO -->
-    <script src="https://paypal.com"></script>
+    <!-- ASEGÚRATE DE PONER TU CLIENT ID REAL DESPUÉS DE "client-id=" -->
+    <script src="https://paypal.com/sdk/js?client-id=AaUt8gr0WRg6eKh2Uv-aXY-40p2WSnBqBlUf2teDhAq0GLuOLvoa-n6jwJ5w2pFDIQg_r1a2v0zxmWPO&currency=USD"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b111e; /* Fondo azul oscuro profundo */
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #151f32; /* Azul oscuro secundario para la tarjeta */
+            border: 1px solid #223452;
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #4f46e5; /* Acento azul eléctrico */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .price-box {
+            background-color: #0b111e;
+            border: 1px dashed #4f46e5;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 28px;
+        }
+
+        .price-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .price-amount {
+            font-size: 28px;
+            font-weight: 800;
+            color: #38bdf8; /* Azul claro brillante para el precio */
+            margin-top: 4px;
+        }
+
+        .stripe-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); /* Degradado azul */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+        }
+
+        .stripe-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .stripe-btn:active {
+            transform: translateY(1px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 24px 0;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #223452;
+        }
+
+        .divider:not(:empty)::before { margin-right: .75em; }
+        .divider:not(:empty)::after { margin-left: .75em; }
+
+        #paypal-button-container {
+            width: 100%;
+        }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto;">
+<body>
 
-    <h1>Inscripción al Torneo</h1>
-    <p style="font-size: 18px;">Costo de entrada: <strong>$5.00 USD</strong></p>
-    
-    <!-- BOTÓN DE STRIPE (TARJETA) -->
-    <button id="checkout-button" style="width: 100%; padding: 12px; background-color: #5469d4; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-bottom: 25px; font-weight: bold;">
-        Pagar con Tarjeta (Stripe)
-    </button>
-    
-    <p style="text-align: center; color: #666; margin-bottom: 15px;">— O BIEN —</p>
+    <div class="card">
+        <h1>Fase de Registro</h1>
+        <p class="subtitle">Asegura tu cupo en la partida privada</p>
+        
+        <div class="price-box">
+            <p class="price-label">Costo de Entrada</p>
+            <p class="price-amount">$5.00 USD</p>
+        </div>
+        
+        <!-- BOTÓN DE STRIPE -->
+        <button id="checkout-button" class="stripe-btn">
+            Pagar con Tarjeta Bancaria
+        </button>
+        
+        <div class="divider">O bien continuar con</div>
 
-    <!-- CONTENEDOR DONDE SE DIBUJARÁ PAYPAL AUTOMÁTICAMENTE -->
-    <div id="paypal-button-container" style="width: 100%;"></div>
+        <!-- CONTENEDOR DE PAYPAL -->
+        <div id="paypal-button-container"></div>
+    </div>
 
     <script>
-        // === LÓGICA PARA EL BOTÓN DE STRIPE ===
+        // === LOGICA STRIPE ===
         document.getElementById('checkout-button').addEventListener('click', async () => {
             try {
                 const response = await fetch('/create-checkout-session', { method: 'POST' });
@@ -40,49 +161,55 @@
             }
         });
 
-        // === LÓGICA PARA LOS BOTONES DE PAYPAL ===
-        paypal.Buttons({
-            // Se ejecuta cuando el usuario hace clic en el botón de PayPal
-            createOrder: async () => {
-                try {
-                    const response = await fetch('/create-paypal-order', { method: 'POST' });
-                    const order = await response.json();
-                    return order.id; // Entrega el ID de orden a PayPal
-                } catch (error) {
-                    console.error("Error al crear orden de PayPal:", error);
-                }
-            },
-            // Se ejecuta cuando el usuario autoriza el pago en la ventana de PayPal
-            onApprove: async (data, actions) => {
-                try {
-                    const response = await fetch('/capture-paypal-order', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderID: data.orderID })
-                    });
-                    const resData = await response.json();
-                    
-                    if (resData.success) {
-                        // Si el servidor confirma el pago, redirige a la página de éxito
-                        window.location.href = resData.redirect;
-                    } else {
-                        alert("El servidor no pudo validar el pago con PayPal.");
+        // === LOGICA PAYPAL ===
+        if (typeof paypal !== 'undefined') {
+            paypal.Buttons({
+                style: {
+                    layout: 'vertical',
+                    color:  'gold',
+                    shape:  'rect',
+                    label:  'paypal'
+                },
+                createOrder: async () => {
+                    try {
+                        const response = await fetch('/create-paypal-order', { method: 'POST' });
+                        const order = await response.json();
+                        return order.id;
+                    } catch (error) {
+                        console.error("Error al crear orden de PayPal:", error);
                     }
-                } catch (error) {
-                    console.error("Error al procesar la captura:", error);
-                    alert("Error de comunicación al procesar tu pago.");
+                },
+                onApprove: async (data, actions) => {
+                    try {
+                        const response = await fetch('/capture-paypal-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orderID: data.orderID })
+                        });
+                        const resData = await response.json();
+                        
+                        if (resData.success) {
+                            window.location.href = resData.redirect;
+                        } else {
+                            alert("El servidor no pudo validar el pago con PayPal.");
+                        }
+                    } catch (error) {
+                        console.error("Error al procesar la captura:", error);
+                        alert("Error de comunicación al procesar tu pago.");
+                    }
+                },
+                onCancel: function (data) {
+                    alert("Pago cancelado por el usuario.");
+                },
+                onError: function (err) {
+                    console.error("Error en el botón de PayPal:", err);
+                    alert("Error en la plataforma de PayPal. Verifica que tu Client ID sea correcto.");
                 }
-            },
-            // Se ejecuta si el usuario cierra la ventana de PayPal o cancela
-            onCancel: function (data) {
-                alert("Pago cancelado por el usuario.");
-            },
-            // Se ejecuta si ocurre un error crítico en la interfaz de PayPal
-            onError: function (err) {
-                console.error("Error en el botón de PayPal:", err);
-                alert("Ocurrió un error con la plataforma de PayPal. Verifica tu Client ID.");
-            }
-        }).render('#paypal-button-container'); // Dibuja los botones en el div de arriba
+            }).render('#paypal-button-container');
+        } else {
+            console.error("El SDK de PayPal no se cargó correctamente. Revisa la etiqueta <script> en el head.");
+            document.getElementById('paypal-button-container').innerHTML = "<p style='color:#ef4444; font-size:14px;'>Error al cargar los botones de PayPal. Verifica el Client ID.</p>";
+        }
     </script>
 
 </body>
