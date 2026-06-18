@@ -29,12 +29,12 @@
 
     <div class="auth-container">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('login')">Ingresar</button>
-            <button class="tab-btn" onclick="switchTab('register')">Registrarse</button>
+            <button id="btn-tab-login" class="tab-btn active" onclick="switchTab('login')">Ingresar</button>
+            <button id="btn-tab-register" class="tab-btn" onclick="switchTab('register')">Registrarse</button>
         </div>
         
         <div class="form-wrapper">
-            <!-- FORMULARIO DE INICIO DE SESIÓN -->
+            <!-- INICIO DE SESIÓN -->
             <div id="login-form" class="form-content active">
                 <h2>Iniciar Sesión</h2>
                 <p class="subtitle">Ingresa al portal del torneo</p>
@@ -52,7 +52,7 @@
                 </form>
             </div>
 
-            <!-- FORMULARIO DE REGISTRO -->
+            <!-- REGISTRO -->
             <div id="register-form" class="form-content">
                 <h2>Crear Cuenta</h2>
                 <p class="subtitle">Registra tu ID para el torneo</p>
@@ -74,15 +74,22 @@
 
     <script>
         function switchTab(type) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.form-content').forEach(f => f.classList.remove('active'));
+            const tabLogin = document.getElementById('btn-tab-login');
+            const tabRegister = document.getElementById('btn-tab-register');
+            const formLogin = document.getElementById('login-form');
+            const formRegister = document.getElementById('register-form');
+
+            tabLogin.classList.remove('active');
+            tabRegister.classList.remove('active');
+            formLogin.classList.remove('active');
+            formRegister.classList.remove('active');
             
             if(type === 'login') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                document.getElementById('login-form').classList.add('active');
+                tabLogin.classList.add('active');
+                formLogin.classList.add('active');
             } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                document.getElementById('register-form').classList.add('active');
+                tabRegister.classList.add('active');
+                formRegister.classList.add('active');
             }
         }
 
