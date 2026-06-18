@@ -3,31 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Torneo Fortnite - Inscripción</title>
+    <!-- Agrega el SDK de PayPal. Reemplaza TU_PAYPAL_CLIENT_ID -->
+    <script src="https://paypal.com"></script>
 </head>
 <body>
     <h1>Inscripción al Torneo</h1>
     <p>Costo de entrada: $5.00 USD</p>
-    <button id="checkout-button">Pagar Entrada</button>
+    
+    <button id="checkout-button" style="padding: 10px; margin-bottom: 20px;">Pagar con Tarjeta (Stripe)</button>
+    
+    <!-- Contenedor donde PayPal dibujará sus botones automáticamente -->
+    <div id="paypal-button-container" style="max-width: 300px;"></div>
 
     <script>
-        const checkoutButton = document.getElementById('checkout-button');
-
-        checkoutButton.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/create-checkout-session', { method: 'POST' });
-                const data = await response.json();
-                
-                if (data.url) {
-                    // CAMBIO IMPORTANTE: Redirección directa del navegador
-                    window.location.href = data.url; 
-                } else {
-                    alert("Error al generar la pasarela de pago");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Hubo un problema de conexión con el servidor.");
-            }
+        // Lógica de Stripe
+        document.getElementById('checkout-button').addEventListener('click', async () => {
+            const response = await fetch('/create-checkout-session', { method: 'POST' });
+            const data = await response.json();
+            if (data.url) window.location.href = data.url;
         });
+
+        // Lógica de PayPal
+        paypal.Buttons({
+            createOrder: async () => {
+                const response = await fetch('/create-paypal-order', { method: 'POST' });
+                const order = await response.json();
+                return order.id;
+            },
+            onApprove: async (data, actions) => {
+                const response = await fetch('/capture-paypal-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderID: data.orderID })
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    window.location.href = resData.redirect;
+                } else {
+                    alert("Error al procesar el pago con PayPal");
+                }
+            }
+        }).render('#paypal-button-container');
     </script>
 </body>
 </html>
