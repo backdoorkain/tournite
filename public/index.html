@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Torneo Fortnite - Inscripción</title>
-    <!-- Cargamos la librería oficial de Stripe en el cliente -->
-    <script src="https://stripe.com"></script>
 </head>
 <body>
     <h1>Inscripción al Torneo</h1>
@@ -12,17 +10,23 @@
     <button id="checkout-button">Pagar Entrada</button>
 
     <script>
-        // Reemplaza con tu Clave Ejecutable de Stripe (pk_test_...)
-        const stripe = Stripe('pk_test_51TjkQlCAgpn6yQVK9TRCDiJEEOythM8k376RUDg2kRO4SURf6mGr7G7FZ06ItxsGICy2fzWS2bwUgaF8tHUDjP1j00RE3CXKVX');
         const checkoutButton = document.getElementById('checkout-button');
 
         checkoutButton.addEventListener('click', async () => {
-            const response = await fetch('/create-checkout-session', { method: 'POST' });
-            const session = await response.json();
-            
-            // Redirige automáticamente a la pasarela segura de Stripe
-            const result = await stripe.redirectToCheckout({ sessionId: session.id });
-            if (result.error) alert(result.error.message);
+            try {
+                const response = await fetch('/create-checkout-session', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.url) {
+                    // CAMBIO IMPORTANTE: Redirección directa del navegador
+                    window.location.href = data.url; 
+                } else {
+                    alert("Error al generar la pasarela de pago");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Hubo un problema de conexión con el servidor.");
+            }
         });
     </script>
 </body>
