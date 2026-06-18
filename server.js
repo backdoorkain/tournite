@@ -37,16 +37,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 2. Busca tu bloque app.use(session(...)) viejo y reemplázalo por este:
 app.use(session({
     store: new SQLiteStore({ 
-        db: 'torneo.db', // Usa el mismo archivo de tu base de datos
-        dir: '.' 
+        db: 'sesiones.db', 
+        dir: '/data' // <--- Asegúrate de que diga '/data' si usas el disco de Render, o '.' si estás en pruebas locales
     }),
     secret: 'secreto-torneo-fortnite-2026',
     resave: false,
     saveUninitialized: false,
-    cookie: { 
-        maxAge: 7 * 24 * 60 * 60 * 1000, // La sesión durará activa 7 días seguidos
-        secure: false 
-    }
+    cookie: { secure: false }
 }));
 
 let CLAVE_PARTIDA = "CERRADO";
@@ -94,7 +91,7 @@ app.post('/api/login', (req, res) => {
 
 // --- STRIPE INTEGRADO CON MONTO REAL ---
 app.post('/create-checkout-session', async (req, res) => {
-    if (!req.session.user) return res.status(401).json({ error: "Inicia sesión" });
+  //if (!req.session.user) return res.status(401).json({ error: "Inicia sesión" });
     try {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
