@@ -7,13 +7,13 @@ const pgSession = require('connect-pg-simple')(session);
 
 const app = express();
 
-// Conexión con Supabase en la nube
+// Conexión con Neon.tech en la nube mediante IPv4
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// Inicializar tablas compatibles con Postgres y tabla para control de sesiones
+// Inicializar tablas compatibles con Postgres
 pool.query(`
     CREATE TABLE IF NOT EXISTS usuarios (
         epic_id TEXT PRIMARY KEY,
@@ -35,10 +35,10 @@ pool.query(`
     ) WITH (OIDS=FALSE);
 `, (err, res) => {
     if (err) {
-        console.error("Error inicializando tablas en Supabase:", err.message);
+        console.error("Error inicializando tablas en Neon:", err.message);
     } else {
-        console.log("Conectado a Supabase. Tablas validadas con éxito.");
-        // Insertar administrador por defecto
+        console.log("Conectado a la nube de Neon. Tablas validadas.");
+        // Insertar administrador maestro por defecto
         pool.query(`INSERT INTO usuarios (epic_id, password, es_admin, pagado) 
                     VALUES ('admin', 'admin123', 1, 1) ON CONFLICT (epic_id) DO NOTHING`);
     }
@@ -48,12 +48,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Busca tu bloque app.use(session(...)) y asegúrate de que luzca así para Neon:
 app.use(session({
     store: new pgSession({
         pool: pool,
         tableName: 'session',
-        createTableIfMissing: true // <--- ¡Añade esta línea! Neon creará la tabla de sesiones sola al arrancar
+        createTableIfMissing: true
     }),
     secret: 'secreto-torneo-fortnite-2026',
     resave: false,
@@ -86,14 +85,13 @@ app.post('/api/registrar', async (req, res) => {
     try {
         const totalRes = await pool.query(`SELECT COUNT(*) as total FROM usuarios WHERE pagado = 1 AND es_admin = 0`);
         const total = parseInt(totalRes.rows[0].total) || 0;
-        
         if (total >= LIMITE_JUGADORES) return res.status(400).json({ error: "Torneo lleno." });
 
         await pool.query(`INSERT INTO usuarios (epic_id, password) VALUES ($1, $2)`, [epic_id, password]);
         req.session.user = { epic_id, pagado: 0, es_admin: 0 };
         res.json({ success: true, redirect: '/checkout.html' });
     } catch (err) {
-        res.status(400).json({ error: "El ID ya existe o está registrado." });
+        res.status(400).json({ error: "El ID de Epic ya está registrado." });
     }
 });
 
@@ -113,10 +111,7 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-// ==========================================================
-// --- PASARELA DE PAGOS (STRIPE) CORREGIDA ---
-// ==========================================================
+// --- PASARELA DE PAGOS DE STRIPE (AJUSTADA A $8.60 USD) ---
 app.post('/create-checkout-session', async (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: "Inicia sesión" });
     try {
@@ -126,13 +121,12 @@ app.post('/create-checkout-session', async (req, res) => {
             line_items: [{
                 price_data: {
                     currency: 'usd',
-                    product_data: { name: 'Inscripción Torneo Fortnite' },
-                    unit_amount: 500, // $5.00 USD
+                    product_data: { name: 'Inscripción Torneo Fortnite Pro' },
+                    unit_amount: 860, // Cobro exacto de $8.60 USD
                 },
                 quantity: 1,
             }],
             mode: 'payment',
-            // RUTA CORREGIDA: Se eliminó /portal.html de en medio
             success_url: `${process.env.YOUR_DOMAIN}/verify-session?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.YOUR_DOMAIN}/checkout.html`,
         });
@@ -146,14 +140,15 @@ app.get('/verify-session', async (req, res) => {
         const session = await stripe.checkout.sessions.retrieve(session_id);
         if (session.payment_status === 'paid') {
             const epic_id = session.client_reference_id;
-            await pool.query(`UPDATE usuarios SET pagado = 1, monto_pago = 5.00 WHERE epic_id = $1`, [epic_id]);
+            // Al pagar $8.60 brutos, fijamos la bolsa limpia en exactamente $8.00 USD netos
+            await pool.query(`UPDATE usuarios SET pagado = 1, monto_pago = 8.00 WHERE epic_id = $1`, [epic_id]);
             if (req.session.user && req.session.user.epic_id === epic_id) req.session.user.pagado = 1;
             res.redirect('/portal.html');
         } else { res.redirect('/checkout.html?error=no_paid'); }
     } catch (error) { res.redirect('/checkout.html?error=error'); }
 });
 
-// --- PORTAL JUGADOR ---
+// --- PORTAL DINÁMICO DEL JUGADOR ---
 app.get('/api/torneo-data', async (req, res) => {
     if (!req.session.user || req.session.user.pagado !== 1) return res.status(403).json({ error: "No autorizado" });
 
@@ -162,29 +157,34 @@ app.get('/api/torneo-data', async (req, res) => {
         const totalRow = await pool.query(`SELECT SUM(monto_pago) as bolsa, COUNT(*) as creados FROM usuarios WHERE pagado = 1 AND es_admin = 0`);
         
         const registrados = parseInt(totalRow.rows[0].creados) || 0;
-        const bolsaTotal = parseFloat(totalRow.rows[0].bolsa) || 0;
+        const bolsaLimpia = parseFloat(totalRow.rows[0].bolsa) || 0;
+
+        // Distribución matemática exacta (40% / 20% / 10%) sobre el dinero neto
+        const premio1 = bolsaLimpia * 0.40;
+        const premio2 = bolsaLimpia * 0.20;
+        const premio3 = bolsaLimpia * 0.10;
+        const pozoParaPremios = premio1 + premio2 + premio3; // Equivale al 70% visible
 
         res.json({
             usuarioActual: req.session.user.epic_id,
             tabla: tablaRes.rows,
             contadorCupos: `${registrados}/${LIMITE_JUGADORES}`,
-            bolsaTotal: bolsaTotal.toFixed(2),
+            premio1st: premio1.toFixed(2),
+            premio2nd: premio2.toFixed(2),
+            premio3rd: premio3.toFixed(2),
+            pozoVisible: pozoParaPremios.toFixed(2),
             clave: CLAVE_PARTIDA,
             estadoTorneo: TORNEO_ESTADO
         });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- ADMIN CONTROL ---
+// --- PANEL DE CONTROL ADMINISTRADOR ---
 app.get('/api/admin/status', async (req, res) => {
     try {
         const result = await pool.query(`SELECT epic_id, p1_pos, p2_pos, p3_pos, puntos_totales, monto_pago FROM usuarios WHERE pagado = 1 AND es_admin = 0 ORDER BY puntos_totales DESC`);
         res.json({ limite: LIMITE_JUGADORES, estado: TORNEO_ESTADO, clave: CLAVE_PARTIDA, jugadores: result.rows });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/admin/configurar', (req, res) => {
@@ -207,9 +207,7 @@ app.post('/api/admin/inyectar-jugador', async (req, res) => {
             ON CONFLICT (epic_id) DO UPDATE SET pagado = 1, monto_pago = $2
         `, [epic_id, montoNum]);
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/admin/actualizar-puntos', async (req, res) => {
@@ -220,9 +218,7 @@ app.post('/api/admin/actualizar-puntos', async (req, res) => {
     try {
         await pool.query(`UPDATE usuarios SET p1_pos = $1, p2_pos = $2, p3_pos = $3, puntos_totales = $4 WHERE epic_id = $5`, [p1, p2, p3, puntosTotales, epic_id]);
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/admin/reset-todo', async (req, res) => {
@@ -231,9 +227,7 @@ app.post('/api/admin/reset-todo', async (req, res) => {
         await pool.query(`DELETE FROM "session"`);
         CLAVE_PARTIDA = "CERRADO"; TORNEO_ESTADO = "CERRADO";
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 const PORT = process.env.PORT || 3000;
