@@ -223,7 +223,7 @@ app.post('/api/admin/eliminar-jugador', async (req, res) => {
     if (!epic_id) return res.status(400).json({ error: "Falta el ID del jugador" });
 
     try {
-        // CORRECCIÓN CLAVE: Se cambió el "?" antiguo por "$1" para compatibilidad con Neon
+        // CORRECCIÓN FINAL: Se cambió "db.query" por "pool.query" para enlazar con Neon
         await pool.query(`DELETE FROM usuarios WHERE epic_id = $1 AND es_admin = 0`, [epic_id]);
         res.json({ success: true });
     } catch (err) {
