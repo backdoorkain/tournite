@@ -5,18 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Torneo Fortnite - Inscripción</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: #0b111e; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .card { background-color: #151f32; border: 1px solid #223452; border-radius: 12px; padding: 30px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); text-align: center; }
-        h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #4f46e5; text-transform: uppercase; letter-spacing: 1px; }
-        .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
-        .price-box { background-color: #0b111e; border: 1px dashed #4f46e5; border-radius: 8px; padding: 15px; margin-bottom: 28px; }
-        .price-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .price-amount { font-size: 28px; font-weight: 800; color: #38bdf8; margin-top: 4px; }
-        .stripe-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, filter 0.2s; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3); }
-        .stripe-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        .stripe-btn:active { transform: translateY(1px); }
-        .error-banner { background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; display: none; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b111e;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #151f32;
+            border: 1px solid #223452;
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #4f46e5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .price-box {
+            background-color: #0b111e;
+            border: 1px dashed #4f46e5;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 28px;
+        }
+
+        .price-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .price-amount {
+            font-size: 28px;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-top: 4px;
+        }
+
+        .stripe-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+        }
+
+        .stripe-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .stripe-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .error-banner {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* DISEÑO DE LA DESCRIPCIÓN DE SEGURIDAD */
+        .secure-notice {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .secure-notice a {
+            color: #38bdf8;
+            text-decoration: underline;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .secure-notice a:hover {
+            color: #4f46e5;
+        }
     </style>
 </head>
 <body>
@@ -32,9 +137,16 @@
             <p class="price-amount">$8.60 USD</p>
         </div>
         
+        <!-- BOTÓN ACTUALIZADO -->
         <button id="checkout-button" class="stripe-btn">
-            Pagar con Tarjeta Bancaria
+            Pagar Entrada
         </button>
+
+        <!-- TEXTO INFORMATIVO DE SEGURIDAD -->
+        <p class="secure-notice">
+            Paga de forma segura con Stripe. 
+            <a href="https://support.stripe.com/questions/what-is-stripe?locale=es-419" target="_blank">Saber más</a>
+        </p>
     </div>
 
     <script>
