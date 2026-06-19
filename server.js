@@ -216,13 +216,14 @@ app.post('/api/admin/inyectar-jugador', async (req, res) => {
     }
 });
 
-// 2. AÑADE ESTE NUEVO ENDPOINT INMEDIATAMENTE ABAJO (Para eliminar jugadores)
+// BUSCA Y REEMPLAZA ESTE ENDPOINT EN TU SERVER.JS:
 app.post('/api/admin/eliminar-jugador', async (req, res) => {
     if (!req.session.user || req.session.user.es_admin !== 1) return res.status(403).json({ error: "No admin" });
     const { epic_id } = req.body;
     if (!epic_id) return res.status(400).json({ error: "Falta el ID del jugador" });
 
     try {
+        // CORRECCIÓN CLAVE: Se cambió el "?" antiguo por "$1" para compatibilidad con Neon
         await pool.query(`DELETE FROM usuarios WHERE epic_id = $1 AND es_admin = 0`, [epic_id]);
         res.json({ success: true });
     } catch (err) {
