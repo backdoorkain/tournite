@@ -105,7 +105,7 @@ app.get('/api/torneo-data', async (req, res) => {
         const bLimpia = parseFloat(totalRow.rows[0].bolsa) || 0;
         res.json({
             usuarioActual: req.session.user.epic_id, tabla: tRes.rows, contadorCupos: `${reg}/${LIMITE_JUGADORES}`,
-            premio1st: (bLimpia * 0.40).toFixed(2), premio2nd: (bLimpia * 0.20).toFixed(2), premio3nd: (bLimpia * 0.10).toFixed(2),
+            premio1st: (bLimpia * 0.40).toFixed(2), premio2nd: (bLimpia * 0.20).toFixed(2), premio3rd: (bLimpia * 0.10).toFixed(2),
             pozoVisible: (bLimpia * 0.70).toFixed(2), clave: CLAVE_PARTIDA, estadoTorneo: TORNEO_ESTADO
         });
     } catch (err) { res.status(500).json({ error: err.message }); }
