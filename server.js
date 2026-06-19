@@ -41,7 +41,8 @@ app.use(session({
 
 let CLAVE_PARTIDA = "tournite2026x1";
 let LIMITE_JUGADORES = 20;       
-let TORNEO_ESTADO = "CERRADO";   
+let TORNEO_ESTADO = "CERRADO";   // Puede ser: "CERRADO", "ABIERTO" o "EN CURSO"
+let CONTADOR_FIN_MS = null;      // Guarda la hora exacta en la que termina la cuenta regresiva  
 
 function calcPts(posicion) {
     const pos = parseInt(posicion) || 0;
@@ -101,12 +102,34 @@ app.get('/api/torneo-data', async (req, res) => {
     try {
         const tRes = await pool.query(`SELECT epic_id, puntos_totales, p1_pos, p2_pos, p3_pos FROM usuarios WHERE pagado = 1 AND es_admin = 0 ORDER BY puntos_totales DESC`);
         const totalRow = await pool.query(`SELECT SUM(monto_pago) as bolsa, COUNT(*) as creados FROM usuarios WHERE pagado = 1 AND es_admin = 0`);
-        const reg = parseInt(totalRow.rows[0].creados) || 0;
-        const bLimpia = parseFloat(totalRow.rows[0].bolsa) || 0;
+        const reg = parseInt(totalRow.rows.creados) || 0;
+        const bLimpia = parseFloat(totalRow.rows.bolsa) || 0;
+
+        // Calcular tiempo restante del contador de 15 minutos
+        let tiempoRestanteMs = 0;
+        if (CONTADOR_FIN_MS) {
+            tiempoRestanteMs = Math.max(0, CONTADOR_FIN_MS - Date.now());
+        }
+
+        // REGLA: Ocultar clave y revelar solo cuando falten 5 minutos (300,000 ms) o si ya inició
+        let claveRevelada = "••••••••••••••";
+        if (tiempoRestanteMs > 0 && tiempoRestanteMs <= 300000) {
+            claveRevelada = CLAVE_PARTIDA;
+        } else if (CONTADOR_FIN_MS && tiempoRestanteMs === 0) {
+            claveRevelada = CLAVE_PARTIDA; // Si el contador llegó a 0, la clave se queda visible
+        }
+
         res.json({
-            usuarioActual: req.session.user.epic_id, tabla: tRes.rows, contadorCupos: `${reg}/${LIMITE_JUGADORES}`,
-            premio1st: (bLimpia * 0.40).toFixed(2), premio2nd: (bLimpia * 0.20).toFixed(2), premio3rd: (bLimpia * 0.10).toFixed(2),
-            pozoVisible: (bLimpia * 0.70).toFixed(2), clave: CLAVE_PARTIDA, estadoTorneo: TORNEO_ESTADO
+            usuarioActual: req.session.user.epic_id,
+            tabla: tRes.rows,
+            contadorCupos: `${reg}/${LIMITE_JUGADORES}`,
+            premio1st: (bLimpia * 0.40).toFixed(2),
+            premio2nd: (bLimpia * 0.20).toFixed(2),
+            premio3rd: (bLimpia * 0.10).toFixed(2),
+            pozoVisible: (bLimpia * 0.70).toFixed(2),
+            clave: claveRevelada,
+            estadoTorneo: TORNEO_ESTADO,
+            tiempoRestante: tiempoRestanteMs // Enviamos el reloj al frontend
         });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -157,6 +180,26 @@ app.post('/api/admin/reset-todo', async (req, res) => {
         await pool.query(`DELETE FROM usuarios WHERE es_admin = 0`); await pool.query(`DELETE FROM "session"`);
         CLAVE_PARTIDA = "CERRADO"; TORNEO_ESTADO = "CERRADO"; res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Endpoint para iniciar la cuenta regresiva de 15 minutos
+app.post('/api/admin/iniciar-contador', (req, res) => {
+    if (!req.session.user || req.session.user.es_admin !== 1) return res.status(403).json({ error: "No admin" });
+
+    TORNEO_ESTADO = "EN CURSO";
+    // Definimos que el contador terminará en 15 minutos a partir de ahora
+    CONTADOR_FIN_MS = Date.now() + (15 * 60 * 1000); 
+
+    res.json({ success: true, finMs: CONTADOR_FIN_MS });
+});
+
+// Endpoint para que el panel de administración lea el estado actual del reloj
+app.get('/api/admin/contador-status', (req, res) => {
+    let tiempoRestanteMs = 0;
+    if (CONTADOR_FIN_MS) {
+        tiempoRestanteMs = Math.max(0, CONTADOR_FIN_MS - Date.now());
+    }
+    res.json({ tiempoRestante: tiempoRestanteMs, estado: TORNEO_ESTADO });
 });
 
 app.listen(process.env.PORT || 3000, () => console.log(`Servidor completo activo.`));
