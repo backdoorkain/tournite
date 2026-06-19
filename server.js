@@ -90,11 +90,25 @@ app.get('/verify-session', async (req, res) => {
     try {
         const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
         if (session.payment_status === 'paid') {
-            await pool.query(`UPDATE usuarios SET pagado = 1, monto_pago = 8.00 WHERE epic_id = $1`, [session.client_reference_id]);
-            if (req.session.user && req.session.user.epic_id === session.client_reference_id) req.session.user.pagado = 1;
+            
+            // CORRECCIÓN EXACTA: Guardamos los $8.60 brutos cobrados en Stripe
+            await pool.query(
+                `UPDATE usuarios SET pagado = 1, monto_pago = $1 WHERE epic_id = $2`, 
+                [parseFloat(8.60), session.client_reference_id]
+            );
+
+            if (req.session.user && req.session.user.epic_id === session.client_reference_id) {
+                req.session.user.pagado = 1;
+            }
+            
             res.redirect('/portal.html');
-        } else { res.redirect('/checkout.html?error=no_paid'); }
-    } catch (error) { res.redirect('/checkout.html?error=error'); }
+        } else { 
+            res.redirect('/checkout.html?error=no_paid'); 
+        }
+    } catch (error) { 
+        console.error("Error validando pago en Neon:", error.message);
+        res.redirect('/checkout.html?error=error'); 
+    }
 });
 
 app.get('/api/torneo-data', async (req, res) => {
