@@ -170,14 +170,22 @@
             cargarStatus();
         }
 
+        // BUSCA Y REEMPLAZA ESTA FUNCIÓN EN TU SCRIPT DE ADMIN.HTML:
         async function eliminarJugador(epic_id) {
             if(confirm(`¿Seguro que deseas eliminar por completo a ${epic_id}?`)) {
-                await fetch('/api/admin/eliminar-jugador', {
+                const response = await fetch('/api/admin/eliminar-jugador', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ epic_id })
                 });
-                cargarStatus();
+                
+                const resData = await response.json();
+                if (response.ok && resData.success) {
+                    // Llama inmediatamente al cargador para desaparecer la fila sin recargar
+                    cargarStatus(); 
+                } else {
+                    alert("Error al intentar eliminar el jugador en el servidor.");
+                }
             }
         }
 
