@@ -86,27 +86,35 @@ app.post('/create-checkout-session', async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
+// BUSCA Y REEMPLAZA ESTE ENDPOINT EN TU SERVER.JS:
 app.get('/verify-session', async (req, res) => {
     try {
         const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
+        
         if (session.payment_status === 'paid') {
+            const epic_id = session.client_reference_id;
             
-            // CORRECCIÓN EXACTA: Guardamos los $8.60 brutos cobrados en Stripe
+            // CORRECCIÓN POSTGRES EN LA NUBE:
+            // Forzamos el valor de 8.60 como un número decimal flotante real en el arreglo
+            const montoDecimal = parseFloat(8.60);
+            
             await pool.query(
                 `UPDATE usuarios SET pagado = 1, monto_pago = $1 WHERE epic_id = $2`, 
-                [parseFloat(8.60), session.client_reference_id]
+                [montoDecimal, epic_id]
             );
 
-            if (req.session.user && req.session.user.epic_id === session.client_reference_id) {
+            // Si el jugador actual es el que pagó, actualizamos su sesión en vivo
+            if (req.session.user && req.session.user.epic_id === epic_id) {
                 req.session.user.pagado = 1;
             }
             
+            console.log(`💰 ¡PAGO CONFIRMADO! Usuario real detectado: ${epic_id}. Registrados $8.60 USD.`);
             res.redirect('/portal.html');
         } else { 
             res.redirect('/checkout.html?error=no_paid'); 
         }
     } catch (error) { 
-        console.error("Error validando pago en Neon:", error.message);
+        console.error("❌ Error crítico validando pago real en Neon:", error.message);
         res.redirect('/checkout.html?error=error'); 
     }
 });
