@@ -179,14 +179,15 @@ app.get('/api/torneo-data', async (req, res) => {
       ORDER BY puntos_totales DESC
     `);
     
+    // CORRECCIÓN: Eliminamos filtros rígidos para asegurar que sume todo pago mayor a cero
     const totalRow = await pool.query(`
       SELECT COALESCE(SUM(monto_pago), 0) as bolsa, COUNT(*) as creados 
       FROM usuarios 
-      WHERE pagado = 1 AND es_admin = 0
+      WHERE pagado = 1 AND monto_pago > 0
     `);
     
-    const reg = parseInt(totalRow.rows.creados) || 0;
-    const bLimpia = parseFloat(totalRow.rows.bolsa) || 0;
+    const reg = parseInt(totalRow.rows[0].creados) || 0;
+    const bLimpia = parseFloat(totalRow.rows[0].bolsa) || 0;
     
     let tiempoRestanteMs = 0;
     if (CONTADOR_FIN_MS) {
