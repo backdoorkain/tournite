@@ -15,9 +15,10 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; }
         input, select { width: 100%; padding: 10px; background-color: #0b111e; border: 1px solid #223452; border-radius: 6px; color: white; font-size: 14px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; width: 100%; transition: filter 0.2s; }
+        .btn { padding: 12px 15px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; width: 100%; transition: filter 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-blue { background: #3b82f6; color: white; }
         .btn-green { background: #10b981; color: white; }
+        .btn-purple { background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }
         .btn-red { background: #ef4444; color: white; }
         .btn-delete { background: #b91c1c; color: white; padding: 6px 10px; font-size: 12px; display: inline-block; width: auto; }
         .btn:hover { filter: brightness(1.2); }
@@ -25,14 +26,29 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #223452; }
         th { background-color: #0b111e; color: #94a3b8; text-transform: uppercase; font-size: 11px; }
         .actions-cell { display: flex; gap: 8px; align-items: center; }
+        .clock-display { font-size: 24px; font-weight: 800; color: #facc15; font-family: monospace; text-align: center; margin-top: 10px; background: #0b111e; padding: 10px; border-radius: 6px; border: 1px dashed #223452; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Panel de Administración</h1>
         
+        <!-- PANEL CONTROL DEL RELOJ -->
+        <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #16153b 0%, #151f32 100%); border-color: #4f46e5;">
+            <h2>Control del Reloj de la Sala Privada</h2>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: center;">
+                <div>
+                    <p style="color:#94a3b8; font-size:13px; margin-bottom:12px;">Al iniciar el contador, el estatus cambiará automáticamente a "EN CURSO". Los jugadores verán el cronómetro y la clave de la partida se desbloqueará sola al faltar 5 minutos.</p>
+                    <button class="btn btn-purple" onclick="iniciarContador()">⚡ Iniciar Contador de 15 Minutos ⚡</button>
+                </div>
+                <div>
+                    <label style="text-align: center;">Tiempo Restante Admin</label>
+                    <div id="admin-clock" class="clock-display">00:00</div>
+                </div>
+            </div>
+        </div>
+
         <div class="grid">
-            <!-- AJUSTES -->
             <div class="card">
                 <h2>Ajustes del Torneo</h2>
                 <div class="form-group">
@@ -40,6 +56,7 @@
                     <select id="config-estado">
                         <option value="CERRADO">Cerrado / En Curso</option>
                         <option value="ABIERTO">Abierto para Registros</option>
+                        <option value="EN CURSO">En Curso / Partidas Activas</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -53,7 +70,6 @@
                 <button class="btn btn-blue" onclick="guardarConfig()">Actualizar Ajustes</button>
             </div>
 
-            <!-- SIMULADOR JUGADORES -->
             <div class="card">
                 <h2>Simulador de Participantes</h2>
                 <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Inyecta registros directos vinculando contraseñas y dinero nulo o real para pruebas.</p>
@@ -67,13 +83,12 @@
                 </div>
                 <div class="form-group">
                     <label>Monto Simulado Pagado ($ USD)</label>
-                    <input type="number" id="bot-monto" value="8.60" step="0.01"> <!-- Fijado default en 8.60 -->
+                    <input type="number" id="bot-monto" value="8.60" step="0.01">
                 </div>
                 <button class="btn btn-green" onclick="inyectarBot()">Inyectar Participante</button>
             </div>
         </div>
-
-        <!-- LISTA CONTROL -->
+        <!-- LISTA CONTROL Y PUNTAJES -->
         <div class="card" style="margin-bottom: 30px;">
             <h2>Control de Puntajes e Inscritos</h2>
             <table>
@@ -88,15 +103,20 @@
                         <th>Acciones de Control</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-admin-jugadores">
-                    <!-- Dinámico -->
-                </tbody>
+                <tbody id="tabla-admin-jugadores"></tbody>
             </table>
             <button class="btn btn-red" style="margin-top: 20px; max-width: 300px;" onclick="resetearTorneo()">Resetear Todo el Torneo</button>
         </div>
     </div>
 
     <script>
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
         async function cargarStatus() {
             const response = await fetch('/api/admin/status');
             const data = await response.json();
@@ -104,6 +124,21 @@
             document.getElementById('config-estado').value = data.estado;
             document.getElementById('config-limite').value = data.limite;
             document.getElementById('config-clave').value = data.clave;
+
+            const clockResponse = await fetch('/api/admin/contador-status');
+            const clockData = await clockResponse.json();
+            
+            const adminClock = document.getElementById('admin-clock');
+            if (clockData.tiempoRestante && clockData.tiempoRestante > 0) {
+                adminClock.innerText = formatTime(clockData.tiempoRestante);
+                adminClock.style.color = "#facc15";
+            } else if (clockData.estado === "EN CURSO") {
+                adminClock.innerText = "LIVE";
+                adminClock.style.color = "#10b981";
+            } else {
+                adminClock.innerText = "00:00";
+                adminClock.style.color = "#64748b";
+            }
 
             const tbody = document.getElementById('tabla-admin-jugadores');
             tbody.innerHTML = "";
@@ -124,6 +159,16 @@
                     </tr>
                 `;
             });
+        }
+
+        async function iniciarContador() {
+            if(confirm("¿Deseas activar la cuenta regresiva de 15 minutos e iniciar el torneo?")) {
+                const response = await fetch('/api/admin/iniciar-contador', { method: 'POST' });
+                if(response.ok) {
+                    alert("¡Contador activado! Las pantallas de los jugadores se sincronizaron.");
+                    cargarStatus();
+                }
+            }
         }
 
         async function guardarConfig() {
@@ -170,33 +215,26 @@
             cargarStatus();
         }
 
-        // BUSCA Y REEMPLAZA ESTA FUNCIÓN EN TU SCRIPT DE ADMIN.HTML:
         async function eliminarJugador(epic_id) {
             if(confirm(`¿Seguro que deseas eliminar por completo a ${epic_id}?`)) {
-                const response = await fetch('/api/admin/eliminar-jugador', {
+                await fetch('/api/admin/eliminar-jugador', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ epic_id })
                 });
-                
-                const resData = await response.json();
-                if (response.ok && resData.success) {
-                    // Llama inmediatamente al cargador para desaparecer la fila sin recargar
-                    cargarStatus(); 
-                } else {
-                    alert("Error al intentar eliminar el jugador en el servidor.");
-                }
+                cargarStatus();
             }
         }
 
         async function resetearTorneo() {
-            if(confirm("¿Estás completamente seguro? Esto eliminará a todos los jugadores registrados y bots.")){
+            if(confirm("¿Estás completamente seguro? Esto eliminará a todos los jugadores registrados y cerrará el reloj.")){
                 await fetch('/api/admin/reset-todo', { method: 'POST' });
                 cargarStatus();
             }
         }
 
         cargarStatus();
+        setInterval(cargarStatus, 2000); // Sincronización continua cada 2 segundos
     </script>
 </body>
 </html>
