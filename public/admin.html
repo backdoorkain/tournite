@@ -107,20 +107,33 @@
  </div>
  </div>
  <script>
+ // Variable global de control de interacción para evitar sobreescritura inmediata
+ let usuarioInteractuando = false;
+
+ // Listener para detectar que el administrador quiere editar la configuración manualmente
+ document.getElementById('config-estado').addEventListener('change', () => { usuarioInteractuando = true; });
+ document.getElementById('config-limite').addEventListener('focus', () => { usuarioInteractuando = true; });
+ document.getElementById('config-clave').addEventListener('focus', () => { usuarioInteractuando = true; });
+
  function formatTime(ms) {
  const totalSeconds = Math.floor(ms / 1000);
  const minutes = Math.floor(totalSeconds / 60);
  const seconds = totalSeconds % 60;
  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
  }
+
  async function cargarStatus() {
  try {
  const response = await fetch('/api/admin/status');
  const data = await response.json();
  
+ // Sincroniza el estado visual solo si no estás editando en ese instante
+ if (!usuarioInteractuando) {
  document.getElementById('config-estado').value = data.estado;
  document.getElementById('config-limite').value = data.limite;
  document.getElementById('config-clave').value = data.clave;
+ }
+ 
  const clockResponse = await fetch('/api/admin/contador-status');
  const clockData = await clockResponse.json();
  
@@ -156,16 +169,20 @@
  });
  } catch (err) { console.error("Error al cargar estatus admin:", err); }
  }
+
  async function iniciarContador() {
  if(confirm("¿Deseas activar la cuenta regresiva de 15 minutos e iniciar el torneo?")) {
  const response = await fetch('/api/admin/iniciar-contador', { method: 'POST' });
  if(response.ok) {
  alert("¡Contador activado! Las pantallas de los jugadores se sincronizaron.");
+ usuarioInteractuando = false;
  cargarStatus();
  }
  }
  }
+
  async function guardarConfig() {
+ try {
  await fetch('/api/admin/configurar', {
  method: 'POST',
  headers: {'Content-Type': 'application/json'},
@@ -176,8 +193,11 @@
  })
  });
  alert("Ajustes globales actualizados");
+ usuarioInteractuando = false; // Desbloqueamos el control tras guardar exitosamente
  cargarStatus();
+ } catch(err) { console.error("Error al guardar ajustes:", err); }
  }
+
  async function inyectarBot() {
  const epic_id = document.getElementById('bot-id').value;
  const password = document.getElementById('bot-pass').value;
@@ -192,6 +212,7 @@
  document.getElementById('bot-pass').value = "";
  cargarStatus();
  }
+
  async function guardarPuntos(epic_id) {
  await fetch('/api/admin/actualizar-puntos', {
  method: 'POST',
@@ -205,6 +226,7 @@
  });
  cargarStatus();
  }
+
  async function eliminarJugador(epic_id) {
  if(confirm(`¿Seguro que deseas eliminar por completo a ${epic_id}?`)) {
  await fetch('/api/admin/eliminar-jugador', {
@@ -215,12 +237,15 @@
  cargarStatus();
  }
  }
+
  async function resetearTorneo() {
  if(confirm("¿Estás completamente seguro? Esto eliminará a todos los jugadores registrados y cerrará el reloj.")){
  await fetch('/api/admin/reset-todo', { method: 'POST' });
+ usuarioInteractuando = false;
  cargarStatus();
  }
  }
+
  cargarStatus();
  setInterval(cargarStatus, 2000); // Sincronización continua cada 2 segundos
  </script>
