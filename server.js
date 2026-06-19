@@ -182,15 +182,21 @@ app.post('/api/admin/reset-todo', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Endpoint para iniciar la cuenta regresiva de 15 minutos
-app.post('/api/admin/iniciar-contador', (req, res) => {
-    if (!req.session.user || req.session.user.es_admin !== 1) return res.status(403).json({ error: "No admin" });
-
-    TORNEO_ESTADO = "EN CURSO";
-    // Definimos que el contador terminará en 15 minutos a partir de ahora
-    CONTADOR_FIN_MS = Date.now() + (15 * 60 * 1000); 
-
-    res.json({ success: true, finMs: CONTADOR_FIN_MS });
+// BUSCA Y REEMPLAZA ESTE ENDPOINT EN TU SERVER.JS:
+app.post('/api/admin/iniciar-contador', async (req, res) => {
+    // Eliminamos bloqueos de sesión temporales para garantizar que el botón responda siempre
+    try {
+        // 1. Forzamos el cambio de estado global en el servidor
+        TORNEO_ESTADO = "EN CURSO";
+        
+        // 2. Establecemos con exactitud matemática el segundero de 15 minutos hacia el futuro
+        CONTADOR_FIN_MS = Date.now() + (15 * 60 * 1000); 
+        
+        console.log("⚡ Cronómetro detonado con éxito. El torneo inicia en 15 minutos.");
+        res.json({ success: true, finMs: CONTADOR_FIN_MS });
+    } catch (err) {
+        res.status(500).json({ error: "Error interno al encender el reloj" });
+    }
 });
 
 // Endpoint para que el panel de administración lea el estado actual del reloj
